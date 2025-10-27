@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7788221130759431360}
   - component: {fileID: 9140555198296300138}
-  - component: {fileID: 7642614859678171486}
+  - component: {fileID: 7028979194731773746}
   - component: {fileID: 5359359874091882501}
   - component: {fileID: 7272576379479845853}
   m_Layer: 0
@@ -29,8 +29,8 @@ Transform:
   m_GameObject: {fileID: 3553486242977875234}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.13, y: -2.78, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.1, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -82,8 +82,8 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 1, g: 0.86603415, b: 0, a: 1}
+  m_Sprite: {fileID: 105169053199506356, guid: 9b4422e7c721ce642bd757524fe62ccf, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -93,8 +93,8 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!61 &7642614859678171486
-BoxCollider2D:
+--- !u!58 &7028979194731773746
+CircleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -127,18 +127,8 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
-    newSize: {x: 1, y: 2}
-    adaptiveTilingThreshold: 0.5
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
+  m_Offset: {x: -0.14, y: 0}
+  m_Radius: 0.44521475
 --- !u!50 &5359359874091882501
 Rigidbody2D:
   serializedVersion: 5
@@ -180,4 +170,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   speed: 15
   damage: 25
-  lifetime: 3
+  lifetime: 2

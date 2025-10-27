@@ -7,19 +7,22 @@ public class PlayerMovement : MonoBehaviour
     [Header("Movement Settings")]
     public float moveSpeed = 5f;
     public float jumpForce = 12f;
-    public float coyoteTime = 0.1f; // small grace period after leaving ground
-    public LayerMask groundLayer;
-    public Transform groundCheck;   // empty GameObject under player feet
+
+    [Header("Ground Check")]
+    public Transform groundCheck;
     public float groundCheckRadius = 0.2f;
+    public LayerMask groundLayer;
 
     private Rigidbody2D rb;
+    private Animator animator;
     private Vector2 moveInput;
-    private bool jumpQueued;
-    private float lastGroundedTime;
+    private bool isGrounded;
+    private bool facingRight = true;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -29,45 +32,43 @@ public class PlayerMovement : MonoBehaviour
 
     public void OnJump(InputAction.CallbackContext context)
     {
-        if (context.started)
-            jumpQueued = true;
+        if (context.started && isGrounded)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+        }
     }
 
     void Update()
     {
-        // Ground check every frame
-        bool grounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+        // Ground check
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
 
-        if (grounded)
-            lastGroundedTime = coyoteTime;
+        // Update animator parameters
+        animator.SetFloat("Speed", Mathf.Abs(moveInput.x));
+        animator.SetBool("IsGrounded", isGrounded);
+        animator.SetFloat("VerticalVelocity", rb.linearVelocity.y);
 
-        lastGroundedTime -= Time.deltaTime;
+        // Flip character
+        if (moveInput.x > 0 && !facingRight)
+        {
+            Flip();
+        }
+        else if (moveInput.x < 0 && facingRight)
+        {
+            Flip();
+        }
     }
 
     void FixedUpdate()
     {
-        // Horizontal movement
         rb.linearVelocity = new Vector2(moveInput.x * moveSpeed, rb.linearVelocity.y);
-
-        // Jump logic
-        if (jumpQueued && lastGroundedTime > 0)
-        {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-            jumpQueued = false;
-            lastGroundedTime = 0;
-        }
-        else
-        {
-            jumpQueued = false; // reset if pressed midair
-        }
     }
 
-    void OnDrawGizmosSelected()
+    void Flip()
     {
-        if (groundCheck != null)
-        {
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
-        }
+        facingRight = !facingRight;
+        Vector3 scale = transform.localScale;
+        scale.x *= -1f;
+        transform.localScale = scale;
     }
 }
