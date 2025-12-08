@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Net.NetworkInformation;
 using UnityEngine;
 
 public class ChaserEnemy : EnemyBase
@@ -9,7 +10,9 @@ public class ChaserEnemy : EnemyBase
     [Header("AI Settings")]
     public float chaseRange = 6f;
     public float attackTriggerDistance = 1.2f;
+    public float verticalAttackRange = 1.5f; // Max height diff to attack
     public float attackCooldown = 1f;
+    public float dropCheckDistance = 4f;     // Max height to drop down
 
     [Header("Combat Hitbox")]
     public Transform attackPoint;
@@ -29,23 +32,15 @@ public class ChaserEnemy : EnemyBase
     private float lastAttackTime;
     private bool facingRight = true;
 
-    public bool IsBusy { get; private set; }
-
     protected override void OnEnable()
     {
-        base.OnEnable(); // Resets Health and Physics
-
-        // FIX 1: Ensure we are upright (just in case)
+        base.OnEnable();
         transform.rotation = Quaternion.identity;
 
-        // FIX 2: Find the player automatically
         if (player == null)
         {
             GameObject p = GameObject.FindGameObjectWithTag("Player");
-            if (p != null)
-            {
-                player = p.transform;
-            }
+            if (p != null) player = p.transform;
         }
 
         IsBusy = false;
@@ -60,34 +55,58 @@ public class ChaserEnemy : EnemyBase
 
     protected override void Update()
     {
+        if (currentHealth <= 0) return;
+
         base.Update();
 
         if (player == null) return;
 
-        // 1. Busy Check: If attacking or hit, do not move or start new logic
+        // 1. Busy Check
         if (IsBusy) return;
 
         bool isGrounded = Physics2D.OverlapCircle(groundCheck.position, checkRadius, groundLayer);
         bool isGroundAhead = Physics2D.OverlapCircle(edgeCheck.position, checkRadius, groundLayer);
 
-        float distanceToPlayer = Mathf.Abs(player.position.x - transform.position.x);
-        float horizontalDir = Mathf.Sign(player.position.x - transform.position.x);
+        // Calculate Distances
+        float distX = Mathf.Abs(player.position.x - transform.position.x);
+        float distY = Mathf.Abs(player.position.y - transform.position.y);
+        float dirX = Mathf.Sign(player.position.x - transform.position.x);
 
-        // Update animator speed (Capitalized)
         if (animator != null)
             animator.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
 
-        // 2. Safety Check: Stop if not grounded or about to fall
-        if (!isGrounded || !isGroundAhead)
+        // 2. Handle Flip BEFORE checking edges
+        // This ensures the enemy turns around if the player is behind them,
+        // even if they are currently standing at an edge.
+        if (distX <= chaseRange)
+        {
+            HandleFlip(dirX);
+        }
+
+        // 3. Drop Logic (Raycast down to see if there is a platform below)
+        bool safeToDrop = false;
+        if (!isGroundAhead)
+        {
+            Vector2 origin = new Vector2(edgeCheck.position.x, edgeCheck.position.y + 0.5f);
+            RaycastHit2D groundBelow = Physics2D.Raycast(origin, Vector2.down, dropCheckDistance, groundLayer);
+            if (groundBelow.collider != null)
+            {
+                safeToDrop = true;
+            }
+        }
+
+        // 4. Safety Stop
+        if (isGrounded && !isGroundAhead && !safeToDrop)
         {
             rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
             return;
         }
 
-        // 3. Attack Logic
-        if (distanceToPlayer <= attackTriggerDistance)
+        // 5. Attack Logic
+        // Must be close on X AND close on Y to attack
+        if (distX <= attackTriggerDistance && distY <= verticalAttackRange)
         {
-            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y); // Stop moving
+            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
 
             if (Time.time >= lastAttackTime + attackCooldown)
             {
@@ -97,11 +116,10 @@ public class ChaserEnemy : EnemyBase
             return;
         }
 
-        // 4. Chase Logic
-        if (distanceToPlayer <= chaseRange)
+        // 6. Chase Logic
+        if (distX <= chaseRange)
         {
-            rb.linearVelocity = new Vector2(horizontalDir * moveSpeed, rb.linearVelocity.y);
-            HandleFlip(horizontalDir);
+            rb.linearVelocity = new Vector2(dirX * moveSpeed, rb.linearVelocity.y);
         }
         else
         {
@@ -112,40 +130,24 @@ public class ChaserEnemy : EnemyBase
     void StartAttackAnimation()
     {
         IsBusy = true;
-        rb.linearVelocity = Vector2.zero; // Stop moving immediately
-        if (animator != null)
-            animator.SetTrigger("Attack"); // Capitalized
+        rb.linearVelocity = Vector2.zero;
+        if (animator != null) animator.SetTrigger("Attack");
     }
 
-    // --- ANIMATION EVENT calls this function ---
     public void AttackHit()
     {
         if (attackPoint == null) return;
-
         Collider2D hitPlayer = Physics2D.OverlapCircle(attackPoint.position, attackHitboxRadius, playerLayer);
 
         if (hitPlayer != null)
         {
             PlayerMovement pm = hitPlayer.GetComponent<PlayerMovement>();
-            if (pm != null)
-            {
-                // Pass 'transform' (this enemy) as the damage source
-                pm.TakeDamage(attackDamage, transform);
-            }
+            if (pm != null) pm.TakeDamage(attackDamage, transform);
         }
-    }
-
-    // --- ANIMATION EVENT calls this function (ADD TO END OF HIT & ATTACK CLIPS) ---
-    public void ResetBusyState()
-    {
-        IsBusy = false;
-        // Stop any residual knockback sliding when recovering
-        rb.linearVelocity = Vector2.zero;
     }
 
     void HandleFlip(float dir)
     {
-        // Prevent flipping if busy (optional, but usually looks better)
         if (IsBusy) return;
 
         if ((dir > 0 && !facingRight) || (dir < 0 && facingRight))
@@ -159,54 +161,22 @@ public class ChaserEnemy : EnemyBase
 
     public override void TakeDamage(float damage)
     {
-        // 1. Process Health reduction (and calling Die() if health <= 0)
         base.TakeDamage(damage);
-
-        // 2. IMPORTANT CHECK:
-        // If we died in the line above, STOP here. Do not play Hit animation.
         if (currentHealth <= 0) return;
 
-        // 3. Alive? Then play Hit animation and apply knockback
         IsBusy = true;
         if (animator != null) animator.SetTrigger("Hit");
 
-        // KNOCKBACK LOGIC
         if (player != null)
         {
-            // Calculate direction away from player
             Vector2 direction = (transform.position - player.position).normalized;
-
-            // Add a slight upward lift (y: 0.2) to reduce friction issues
             Vector2 knockback = new Vector2(direction.x, 0.2f).normalized * knockbackForce;
-
-            rb.linearVelocity = Vector2.zero; // Reset existing velocity first
+            rb.linearVelocity = Vector2.zero;
             rb.AddForce(knockback, ForceMode2D.Impulse);
         }
     }
 
-    protected override void Die()
-    {
-        if (animator != null) animator.SetTrigger("Die");
-
-        IsBusy = true;
-        rb.linearVelocity = Vector2.zero;
-
-        // Turn off physics so it doesn't block the player while dying
-        rb.simulated = false;
-        GetComponent<Collider2D>().enabled = false;
-
-        // POOLING CHANGE: Start routine instead of Destroy
-        StartCoroutine(DisableAfterDeathRoutine());
-    }
-
-    private IEnumerator DisableAfterDeathRoutine()
-    {
-        // Wait for death animation to finish
-        yield return new WaitForSeconds(2f);
-
-        // Return to pool
-        gameObject.SetActive(false);
-    }
+    // --- Debugging ---
 
     void OnDrawGizmosSelected()
     {
@@ -223,6 +193,12 @@ public class ChaserEnemy : EnemyBase
         {
             Gizmos.color = Color.blue;
             Gizmos.DrawWireSphere(groundCheck.position, checkRadius);
+        }
+
+        if (edgeCheck != null)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawLine(edgeCheck.position, edgeCheck.position + Vector3.down * dropCheckDistance);
         }
     }
 }

@@ -46,7 +46,7 @@ public class PooledEnemySpawner : MonoBehaviour
                         Vector3 worldPos = map.GetCellCenterWorld(pos);
 
                         // Adjust Y to sit on top of the tile (assuming 1 unit tiles)
-                        worldPos.y += 0.5f;
+                        worldPos.y += 1.0f;
 
                         validSpawnPositions.Add(worldPos);
                     }

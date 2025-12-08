@@ -31,6 +31,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 3172855291088965356}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &5000742522625642630
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 296334613610381271}
+  m_Layer: 6
+  m_Name: WeaponHolder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &296334613610381271
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5000742522625642630}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1, y: 0.5, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3172855291088965356}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5029293114864887965
 GameObject:
   m_ObjectHideFlags: 0
@@ -321,6 +352,7 @@ Transform:
   - {fileID: 4182448484290586621}
   - {fileID: 5637889161521266376}
   - {fileID: 815892676051919891}
+  - {fileID: 296334613610381271}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &3512583039760972567
@@ -468,6 +500,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: d6cf4ce5-e709-4434-97a0-9cdb16e6687d
     m_ActionName: Player/Melee
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 8341064952742270877}
+        m_TargetAssemblyTypeName: PlayerShooting, Assembly-CSharp
+        m_MethodName: OnInteract
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 248c0b38-0b5a-4c49-8533-33abf8f7b3d0
+    m_ActionName: 'Player/Pickup[/Keyboard/r]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: 
@@ -516,7 +564,7 @@ CapsuleCollider2D:
     m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
   m_LayerOverridePriority: 0
   m_ForceSendLayers:
     serializedVersion: 2
@@ -549,15 +597,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ba62c9848fd0fd4dab08c1687d58359, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  moveSpeed: 5
+  moveSpeed: 7
   jumpForce: 12
   maxHealth: 100
+  knockbackForce: 5
   attackPoint: {fileID: 815892676051919891}
-  attackRange: 0.5
-  attackDamage: 15
+  attackRange: 0.8
+  attackDamage: 30
   enemyLayers:
     serializedVersion: 2
     m_Bits: 128
+  hitEffect: {fileID: 5083598575146446870, guid: 6099383666445794b90a5efb1878233b, type: 3}
   groundCheck: {fileID: 5637889161521266376}
   groundCheckRadius: 0.2
   groundLayer:
@@ -575,10 +625,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f0768c25a8d6574091fd8068d83b48d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerShooting
-  projectilePrefab: {fileID: 3553486242977875234, guid: 993bd4a5b80e5bd419f7f5d9d28df5ad, type: 3}
+  weaponHolder: {fileID: 296334613610381271}
   firePoint: {fileID: 3172855291088965356}
   crosshair: {fileID: 4182448484290586621}
-  fireRate: 0.3
 --- !u!1 &8637878573829309695
 GameObject:
   m_ObjectHideFlags: 0

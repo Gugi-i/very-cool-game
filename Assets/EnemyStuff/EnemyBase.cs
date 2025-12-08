@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
@@ -6,9 +7,12 @@ public class EnemyBase : MonoBehaviour
     [Header("Stats")]
     public float maxHealth = 50f;
     protected float currentHealth;
+    public int score = 0;
 
     [Header("Movement")]
     public float moveSpeed = 2f;
+
+    public bool IsBusy { get; protected set; }
 
     protected Rigidbody2D rb;
     protected Animator animator;
@@ -16,7 +20,6 @@ public class EnemyBase : MonoBehaviour
 
     protected virtual void Awake()
     {
-        currentHealth = maxHealth;
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         mainCollider = GetComponent<Collider2D>();
@@ -25,15 +28,25 @@ public class EnemyBase : MonoBehaviour
     protected virtual void OnEnable()
     {
         currentHealth = maxHealth;
+        IsBusy = false;
 
-        // Ensure physics are back on
-        if (rb != null) rb.simulated = true;
+        if (rb != null)
+        {
+            rb.simulated = true;
+            rb.linearVelocity = Vector2.zero;
+        }
         if (mainCollider != null) mainCollider.enabled = true;
+
+        if (animator != null)
+        {
+            animator.Rebind();
+            animator.Update(0f);
+        }
     }
 
     protected virtual void Update()
     {
-        // Override in subclasses
+        if (currentHealth <= 0) return;
     }
 
     public virtual void TakeDamage(float damage)
@@ -48,7 +61,28 @@ public class EnemyBase : MonoBehaviour
 
     protected virtual void Die()
     {
-        // Default behavior for pooling
+        if (!rb.simulated) return;
+
+        if (animator != null) animator.SetTrigger("Die");
+
+        rb.linearVelocity = Vector2.zero;
+        rb.simulated = false;
+        mainCollider.enabled = false;
+
+        this.enabled = false;
+
+        StartCoroutine(DisableAfterDeathRoutine());
+    }
+
+    private IEnumerator DisableAfterDeathRoutine()
+    {
+        yield return new WaitForSeconds(2f);
         gameObject.SetActive(false);
+    }
+
+    public void ResetBusyState()
+    {
+        if (currentHealth <= 0) return;
+        IsBusy = false;
     }
 }

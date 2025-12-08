@@ -16,6 +16,7 @@ public class PlayerMovement : MonoBehaviour
     public float attackRange = 0.7f; // How big the hitbox is
     public int attackDamage = 20;
     public LayerMask enemyLayers; // Who gets hit?
+    public GameObject hitEffect;
 
     [Header("Ground Check")]
     public Transform groundCheck;
@@ -78,6 +79,7 @@ public class PlayerMovement : MonoBehaviour
         foreach (Collider2D enemy in hitEnemies)
         {
             Debug.Log("We hit " + enemy.name);
+            if (hitEffect != null) Instantiate(hitEffect, attackPoint.transform.position, Quaternion.identity);
 
             // OPTION A: If you have a specific Enemy script
             // enemy.GetComponent<EnemyAI>().TakeDamage(attackDamage);

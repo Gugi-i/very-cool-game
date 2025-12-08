@@ -1,11 +1,19 @@
 using UnityEngine;
+using UnityEngine.UIElements;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class Projectile : MonoBehaviour
 {
+    [Header("Projectile settings")]
     public float speed = 15f;
     public float damage = 25f;
     public float lifetime = 5f;
+
+    [Header("Projectile sound effect")]
+    public AudioClip shootSound;
+
+    [Header("Particle effect")]
+    public GameObject hitEffect;
 
     private Rigidbody2D rb;
 
@@ -41,9 +49,9 @@ public class Projectile : MonoBehaviour
         if (enemy != null)
         {
             enemy.TakeDamage(damage);
+            if (hitEffect != null) Instantiate(hitEffect, transform.position, Quaternion.identity);
+            if (shootSound) AudioSource.PlayClipAtPoint(shootSound, enemy.GetComponent<Transform>().position, 1f);
             Destroy(gameObject);
         }
-
-        // TODO: handle hitting walls / environment
     }
 }
